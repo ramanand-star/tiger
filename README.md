@@ -22,5 +22,5 @@ This project is a Spring Boot application for managing pricing records. It provi
 
 1. Clone the repository:
    ```sh
-   git clone https://github.com/your-username/pricing-record-management.git
-   cd pricing-record-management
+   git clone https://github.com/ramanand-star/tiger.git
+   
