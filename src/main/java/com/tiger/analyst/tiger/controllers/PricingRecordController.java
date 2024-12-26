@@ -14,18 +14,24 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @RestController
 @RequestMapping("/pricing")
+//@CrossOrigin(origins = "http://localhost:5173")
 @CrossOrigin
 public class PricingRecordController {
+
+    private static final Logger logger = LoggerFactory.getLogger(PricingRecordController.class);
+
 
     @Autowired
     private PricingRecordService service;
 
     @PostMapping("/upload")
     public ResponseEntity<String> uploadFile(@RequestParam("file") MultipartFile file) {
-        System.out.println("Uploading file: " + file.getOriginalFilename());
+        logger.info("Uploading file: {}", file.getOriginalFilename());
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yy");
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
             List<PricingRecord> records = reader.lines().skip(1).map(line -> {
@@ -44,8 +50,9 @@ public class PricingRecordController {
             records.forEach(service::save);
             return ResponseEntity.ok("File uploaded successfully");
         } catch (Exception e) {
-            System.out.println("Error processing file: " + e.getMessage());
-            return ResponseEntity.status(500).body("Error processing file: " + e.getMessage());
+            logger.error("Error processing file: {}", e.getMessage());
+            throw new RuntimeException("Error processing file: " + e.getMessage());
+
         }
     }
 
@@ -54,6 +61,8 @@ public class PricingRecordController {
                                       @RequestParam(required = false) String sku,
                                       @RequestParam(required = false) String productName,
                                       @RequestParam(required = false) LocalDate date) {
+        logger.info("Searching records with parameters - storeId: {}, sku: {}, productName: {}, date: {}", storeId, sku, productName, date);
+
         if (storeId != null) {
             return service.searchByStoreId(storeId);
         } else if (sku != null) {
@@ -69,7 +78,7 @@ public class PricingRecordController {
 
     @PutMapping("/{id}")
     public ResponseEntity<PricingRecord> updateRecord(@PathVariable Long id, @RequestBody PricingRecord updatedRecord) {
-        System.out.println("Updating record with ID: " + id);
+        logger.info("Updating record with ID: {}", id);
         return service.findById(id).map(record -> {
             record.setStoreId(updatedRecord.getStoreId());
             record.setSku(updatedRecord.getSku());
@@ -77,6 +86,6 @@ public class PricingRecordController {
             record.setPrice(updatedRecord.getPrice());
             record.setDate(updatedRecord.getDate());
             return ResponseEntity.ok(service.save(record));
-        }).orElseGet(() -> ResponseEntity.notFound().build());
+        }).orElseThrow(() -> new RuntimeException("Record not found with ID: " + id));
     }
 }
