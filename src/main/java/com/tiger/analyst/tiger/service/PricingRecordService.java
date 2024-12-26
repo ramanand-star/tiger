@@ -4,6 +4,7 @@ import com.tiger.analyst.tiger.model.PricingRecord;
 import com.tiger.analyst.tiger.repository.PricingRecordRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
@@ -16,7 +17,7 @@ public class PricingRecordService {
     @Autowired
     private PricingRecordRepository repository;
 
-    @Transactional
+    @Transactional(isolation = Isolation.SERIALIZABLE, rollbackFor = Exception.class)
     public PricingRecord save(PricingRecord record) {
         return repository.save(record);
     }
@@ -39,4 +40,7 @@ public class PricingRecordService {
     public Optional<PricingRecord> findById(Long id) {
         return repository.findById(id);
     }
+
+//    public Object search(String s) {
+//    }
 }
